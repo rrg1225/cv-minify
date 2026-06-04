@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
 
 // 【技术亮点扩展】通用型、超轻量 Markdown 文本解析引擎
 function parseMarkdownToHtml(md) {
@@ -7,29 +7,107 @@ function parseMarkdownToHtml(md) {
     // 转义 HTML 基础字符防止 XSS 注入
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    
+
     // 1. 标准多级标题支持
     .replace(/^#\s+(.+)$/gm, '<h1 class="text-3xl font-extrabold text-gray-900 border-b border-gray-200 pb-2 mb-4">$1</h1>')
     .replace(/^##\s+(.+)$/gm, '<h2 class="text-xl font-bold text-blue-600 pb-1 mt-6 mb-3 border-b border-gray-100">$1</h2>')
     .replace(/^###\s+(.+)$/gm, '<h3 class="text-lg font-semibold text-gray-800 mt-4 mb-2 flex justify-between">$1</h3>')
     .replace(/^####\s+(.+)$/gm, '<h4 class="text-base font-medium text-gray-700 mt-3 mb-1">$1</h4>')
-    
+
     // 2. 通用引用块支持 (> 文本)
     .replace(/^>\s+(.+)$/gm, '<blockquote class="border-l-4 border-gray-300 pl-4 italic text-gray-600 bg-gray-50 py-1 my-3 rounded-r">$1</blockquote>')
-    
+
     // 3. 基础行内格式 (加粗与专用小标签)
     .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-gray-900">$1</strong>')
     .replace(/\[(.*?)\]/g, '<span class="inline-block bg-gray-100 text-gray-800 text-xs px-1.5 py-0.5 rounded font-mono border border-gray-200 mx-0.5">$1</span>')
-    
+
     // 4. 无序列表支持
     .replace(/^\*\s+(.+)$/gm, '<li class="list-disc list-inside text-gray-600 leading-relaxed ml-2">$1</li>')
-    
+
     // 5. 换行与间距优化
     .replace(/\n\n/g, '<div class="h-3"></div>')
     .replace(/\n/g, '<br />');
 
   return html;
 }
+
+function useDebouncedValue(value, delay = 120) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedValue(value), delay);
+    return () => window.clearTimeout(timer);
+  }, [value, delay]);
+
+  return debouncedValue;
+}
+
+const EditorPane = memo(function EditorPane({ value, onChange, visible }) {
+  if (!visible) return null;
+
+  return (
+    <div class="h-full border-r border-gray-200 bg-gray-900 transition-all duration-150 print:hidden">
+      <textarea
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="在此处输入任意通用 Markdown 语法进行修改与预览..."
+        class="w-full h-full p-4 font-mono text-gray-200 bg-gray-900 focus:outline-none resize-none leading-relaxed text-xs"
+      />
+    </div>
+  );
+});
+
+const PreviewPane = memo(function PreviewPane({ html, viewMode, widthStyle }) {
+  if (viewMode === 'edit') return null;
+
+  return (
+    <div style={widthStyle} class="h-full overflow-y-auto p-8 bg-gray-100 transition-all duration-150 print:p-0 print:bg-white print:w-full">
+      <div
+        id="a4-resume-page"
+        dangerouslySetInnerHTML={{ __html: html }}
+        class="bg-white mx-auto shadow-md p-12 text-gray-800 shadow-gray-300 w-[210mm] min-h-[297mm] box-border print:shadow-none print:p-0 print:mx-0 print:w-full"
+      />
+    </div>
+  );
+});
+
+const AiSuggestionPanel = memo(function AiSuggestionPanel({ status, text, error }) {
+  return (
+    <div class="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm print:hidden">
+      <div class="flex items-center justify-between gap-3 mb-4">
+        <div>
+          <h2 class="text-sm font-semibold text-gray-900">AI 智能润色建议</h2>
+          <p class="text-xs text-gray-500">流式渲染结果会实时追加，帮助你快速优化简历文本。</p>
+        </div>
+        <span className={`text-xs font-medium ${status === 'error' ? 'text-red-600' : status === 'loading' ? 'text-blue-600' : 'text-green-600'}`}>
+          {status === 'loading' ? '生成中…' : status === 'error' ? '生成失败' : status === 'success' ? '已完成' : '空闲'}
+        </span>
+      </div>
+
+      {status === 'loading' && (
+        <div class="space-y-3 animate-pulse">
+          <div class="h-3 w-3/4 rounded-full bg-gray-200" />
+          <div class="h-3 w-full rounded-full bg-gray-200" />
+          <div class="h-3 w-5/6 rounded-full bg-gray-200" />
+        </div>
+      )}
+
+      {status === 'error' && (
+        <div class="rounded-xl bg-red-50 p-4 text-sm text-red-700">
+          {error || 'AI 服务调用失败，请稍后重试。'}
+        </div>
+      )}
+
+      {text ? (
+        <div class="whitespace-pre-wrap rounded-xl border border-gray-100 bg-slate-50 p-4 text-sm leading-7 text-gray-800">
+          {text}
+        </div>
+      ) : status === 'idle' ? (
+        <div class="text-sm text-gray-500">点击“AI 润色”后，AI 会将优化建议按流式输出展示在此处。</div>
+      ) : null}
+    </div>
+  );
+});
 
 // 选项：通用新手欢迎引导文档
 const GENERAL_WELCOME_MD = `# 🚀 欢迎使用 cv-minify (通用工作站)
@@ -60,11 +138,112 @@ const RESUME_TEMPLATE_MD = `# 你的名字 (Name)
 
 export default function ResumeEditor() {
   const [markdown, setMarkdown] = useState('');
-  const [hasFile, setHasFile] = useState(false); 
-  const [viewMode, setViewMode] = useState('split'); 
-  const [splitWidth, setSplitWidth] = useState(50); 
+  const [hasFile, setHasFile] = useState(false);
+  const [viewMode, setViewMode] = useState('split');
+  const [splitWidth, setSplitWidth] = useState(50);
+  const [aiStatus, setAiStatus] = useState('idle');
+  const [aiStreamedText, setAiStreamedText] = useState('');
+  const [aiError, setAiError] = useState('');
   const previewWindowRef = useRef(null);
   const fileInputRef = useRef(null);
+
+  const debouncedMarkdown = useDebouncedValue(markdown, 120);
+  const htmlContent = useMemo(() => parseMarkdownToHtml(debouncedMarkdown), [debouncedMarkdown]);
+
+  const fetchSSEStream = useCallback(async (url, options, onMessage, signal) => {
+    const response = await fetch(url, {
+      ...options,
+      signal,
+      headers: {
+        ...(options?.headers || {}),
+        Accept: 'text/event-stream',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`AI 服务请求失败：${response.status} ${response.statusText}`);
+    }
+    if (!response.body) {
+      throw new Error('当前环境不支持流式响应。');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    const flushBuffer = () => {
+      let boundary;
+      while ((boundary = buffer.indexOf('\n\n')) !== -1) {
+        const eventString = buffer.slice(0, boundary);
+        buffer = buffer.slice(boundary + 2);
+
+        const lines = eventString.split(/\r?\n/);
+        let data = '';
+        for (const line of lines) {
+          if (line.startsWith('data:')) {
+            data += line.slice(5);
+          }
+        }
+        data = data.trim();
+        if (!data) continue;
+        if (data === '[DONE]') {
+          return true;
+        }
+        onMessage(data);
+      }
+      return false;
+    };
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      if (flushBuffer()) return;
+    }
+
+    if (buffer.length > 0) {
+      flushBuffer();
+    }
+  }, []);
+
+  const handleAIPolish = useCallback(async () => {
+    if (!markdown.trim()) {
+      setAiError('请先输入简历内容，然后再执行 AI 润色。');
+      setAiStatus('error');
+      return;
+    }
+
+    setAiStatus('loading');
+    setAiStreamedText('');
+    setAiError('');
+
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), 20000);
+
+    try {
+      await fetchSSEStream(
+        '/api/ai-polish',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ text: markdown, action: 'polish' }),
+        },
+        (chunk) => {
+          setAiStreamedText((prev) => prev + chunk);
+        },
+        controller.signal,
+      );
+      setAiStatus('success');
+    } catch (error) {
+      const message = error.name === 'AbortError' ? 'AI 请求超时，请稍后重试。' : error.message || 'AI 服务发生异常，请重试。';
+      setAiError(message);
+      setAiStatus('error');
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }, [fetchSSEStream, markdown]);
 
   useEffect(() => {
     const savedContent = localStorage.getItem('cv_minify_autosave');
@@ -75,12 +254,10 @@ export default function ResumeEditor() {
   }, []);
 
   useEffect(() => {
-    if (hasFile && markdown) {
-      localStorage.setItem('cv_minify_autosave', markdown);
+    if (hasFile) {
+      localStorage.setItem('cv_minify_autosave', debouncedMarkdown);
     }
-  }, [markdown, hasFile]);
-
-  const htmlContent = parseMarkdownToHtml(markdown);
+  }, [debouncedMarkdown, hasFile]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
@@ -220,24 +397,22 @@ export default function ResumeEditor() {
             <button onClick={() => setViewMode('preview')} class={`px-3 py-1 rounded text-xs transition cursor-pointer ${viewMode === 'preview' ? 'bg-white shadow-sm font-medium text-blue-600' : 'text-gray-600'}`}>仅预览</button>
           </div>
           <button onClick={openIndependentPreview} class="px-3 py-1.5 bg-gray-800 text-white rounded text-xs hover:bg-gray-700 transition font-medium flex items-center cursor-pointer">🖥️ 投射外接屏幕</button>
+          <button onClick={handleAIPolish} disabled={aiStatus === 'loading'} className={`px-3 py-1.5 rounded text-xs transition font-medium flex items-center ${aiStatus === 'loading' ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}>
+            {aiStatus === 'loading' ? 'AI 生成中…' : 'AI 润色'}
+          </button>
           <button onClick={() => window.print()} class="px-3 py-1.5 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition font-medium flex items-center cursor-pointer">🖨️ 导出 PDF (Ctrl + P)</button>
         </div>
       </header>
 
       <main class="flex-1 flex overflow-hidden relative">
-        <div style={{ width: viewMode === 'split' ? `${splitWidth}%` : viewMode === 'edit' ? '100%' : '0%' }} class={`h-full border-r border-gray-200 bg-gray-900 transition-all duration-150 ${viewMode === 'preview' ? 'hidden' : 'block'} print:hidden`}>
-          <textarea
-            value={markdown}
-            onChange={(e) => setMarkdown(e.target.value)}
-            placeholder="在此处输入任意通用 Markdown 语法进行修改与预览..."
-            class="w-full h-full p-4 font-mono text-gray-200 bg-gray-900 focus:outline-none resize-none leading-relaxed text-xs"
-          />
+        <div style={{ width: viewMode === 'split' ? `${splitWidth}%` : viewMode === 'edit' ? '100%' : '0%' }} class={`${viewMode === 'preview' ? 'hidden' : 'block'}`}>
+          <EditorPane visible={viewMode !== 'preview'} value={markdown} onChange={setMarkdown} />
         </div>
 
         {viewMode === 'split' && (
           <div class="absolute top-0 bottom-0 w-1 bg-gray-200 hover:bg-blue-400 cursor-ew-resize z-20 print:hidden"
                style={{ left: `${splitWidth}%` }}
-               onMouseDown={(e) => {
+               onMouseDown={() => {
                  const handleMouseMove = (moveEvent) => {
                    const percentage = (moveEvent.clientX / window.innerWidth) * 100;
                    if (percentage > 20 && percentage < 80) setSplitWidth(percentage);
@@ -252,8 +427,9 @@ export default function ResumeEditor() {
           />
         )}
 
-        <div style={{ width: viewMode === 'split' ? `${100 - splitWidth}%` : viewMode === 'preview' ? '100%' : '0%' }} class={`h-full overflow-y-auto p-8 bg-gray-100 transition-all duration-150 ${viewMode === 'edit' ? 'hidden' : 'block'} print:p-0 print:bg-white print:w-full`}>
-          <div id="a4-resume-page" dangerouslySetInnerHTML={{ __html: htmlContent }} class="bg-white mx-auto shadow-md p-12 text-gray-800 shadow-gray-300 w-[210mm] min-h-[297mm] box-border print:shadow-none print:p-0 print:mx-0 print:w-full" />
+        <div class="flex flex-col w-full">
+          <PreviewPane html={htmlContent} viewMode={viewMode} widthStyle={{ width: viewMode === 'split' ? `${100 - splitWidth}%` : viewMode === 'preview' ? '100%' : '0%' }} />
+          <AiSuggestionPanel status={aiStatus} text={aiStreamedText} error={aiError} />
         </div>
       </main>
     </div>

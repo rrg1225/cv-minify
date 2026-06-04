@@ -2,6 +2,52 @@
 
 @media print {
   @page { size: A4; margin: 15mm; }
-  html, body { background: #fff; width: 210mm; height: 297mm; }
-  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  html, body {
+    background: #fff !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    color-adjust: exact !important;
+  }
+
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  body, #root, .preview-page {
+    overflow: visible !important;
+  }
+
+  body::-webkit-scrollbar,
+  #root::-webkit-scrollbar,
+  .preview-page::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .print\:hidden,
+  .no-print {
+    display: none !important;
+  }
+
+  #a4-resume-page {
+    background: #fff !important;
+    box-shadow: none !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    width: auto !important;
+    min-height: auto !important;
+  }
+
+  #a4-resume-page > *,
+  #a4-resume-page h2,
+  #a4-resume-page h3,
+  #a4-resume-page h4,
+  #a4-resume-page blockquote,
+  #a4-resume-page ul,
+  #a4-resume-page ol,
+  #a4-resume-page li {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
 }
+
