@@ -163,6 +163,12 @@ export default function ResumeEditor() {
 
   const debouncedMarkdown = useDebouncedValue(markdown, 120);
   const htmlContent = useMemo(() => parseMarkdownToHtml(debouncedMarkdown), [debouncedMarkdown]);
+  const documentStats = useMemo(() => {
+    const plain = markdown.trim();
+    const words = plain ? plain.split(/\s+/).filter(Boolean).length : 0;
+    const headings = (markdown.match(/^#{1,6}\s+/gm) || []).length;
+    return { chars: markdown.length, words, headings };
+  }, [markdown]);
 
   const fetchSSEStream = useCallback(async (url, options, onMessage, signal) => {
     const response = await fetch(url, {
@@ -295,6 +301,16 @@ export default function ResumeEditor() {
     setHasFile(true);
   };
 
+  const downloadMarkdown = () => {
+    const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'cv-minify-document.md';
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   const handleGoBack = () => {
     if (window.confirm('确认返回主控制台？系统已为您自动安全保存当前进度。')) {
       setHasFile(false);
@@ -406,6 +422,9 @@ export default function ResumeEditor() {
           <button onClick={handleGoBack} class="mr-2 text-gray-500 hover:text-gray-800 transition cursor-pointer" title="返回主控制台">⬅️ 控制台</button>
           <span class="font-bold text-gray-800 text-base">📄 cv-minify</span>
           <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-medium">● 自动保存中</span>
+          <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">
+            {documentStats.chars} chars · {documentStats.words} words · {documentStats.headings} headings
+          </span>
         </div>
 
         <div class="flex items-center space-x-3">
@@ -415,6 +434,7 @@ export default function ResumeEditor() {
             <button onClick={() => setViewMode('preview')} class={`px-3 py-1 rounded text-xs transition cursor-pointer ${viewMode === 'preview' ? 'bg-white shadow-sm font-medium text-blue-600' : 'text-gray-600'}`}>仅预览</button>
           </div>
           <button onClick={openIndependentPreview} class="px-3 py-1.5 bg-gray-800 text-white rounded text-xs hover:bg-gray-700 transition font-medium flex items-center cursor-pointer">🖥️ 投射外接屏幕</button>
+          <button onClick={downloadMarkdown} class="px-3 py-1.5 bg-white text-gray-700 border border-gray-200 rounded text-xs hover:bg-gray-50 transition font-medium flex items-center cursor-pointer">下载 MD</button>
           <button onClick={handleAIPolish} disabled={aiStatus === 'loading'} className={`px-3 py-1.5 rounded text-xs transition font-medium flex items-center ${aiStatus === 'loading' ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-green-600 text-white hover:bg-green-700'}`}>
             {aiStatus === 'loading' ? 'AI 生成中…' : 'AI 润色'}
           </button>
