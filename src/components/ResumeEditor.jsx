@@ -42,6 +42,20 @@ function useDebouncedValue(value, delay = 120) {
   return debouncedValue;
 }
 
+function buildLocalPolishTips(markdown) {
+  const headings = (markdown.match(/^#{1,3}\s+/gm) || []).length;
+  const bullets = (markdown.match(/^\*\s+/gm) || []).length;
+  const hasMetric = /\d+%|\d+\s*(ms|s|hours|days|users|requests|stars)/i.test(markdown);
+
+  return [
+    '本地降级建议：未检测到 /api/ai-polish 服务，已使用内置规则生成优化建议。',
+    headings < 2 ? '1. 增加清晰的二级标题，让阅读者快速定位经历、项目和技能。' : '1. 标题层级清晰，可以继续保持。',
+    bullets < 3 ? '2. 建议把长段落拆成项目符号，突出动作、结果和影响。' : '2. 列表结构已经具备，建议每条都以动词开头。',
+    hasMetric ? '3. 已包含量化指标，建议把最强指标放在句首。' : '3. 尽量加入百分比、耗时、规模或用户量等量化结果。',
+    '4. 导出前使用“仅预览”模式检查 A4 分页，避免关键项目被截断。'
+  ].join('\n');
+}
+
 const EditorPane = memo(function EditorPane({ value, onChange, visible }) {
   if (!visible) return null;
 
@@ -237,9 +251,13 @@ export default function ResumeEditor() {
       );
       setAiStatus('success');
     } catch (error) {
-      const message = error.name === 'AbortError' ? 'AI 请求超时，请稍后重试。' : error.message || 'AI 服务发生异常，请重试。';
-      setAiError(message);
-      setAiStatus('error');
+      if (error.name === 'AbortError') {
+        setAiError('AI 请求超时，请稍后重试。');
+        setAiStatus('error');
+      } else {
+        setAiStreamedText(buildLocalPolishTips(markdown));
+        setAiStatus('success');
+      }
     } finally {
       window.clearTimeout(timer);
     }
