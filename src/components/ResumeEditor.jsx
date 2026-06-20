@@ -296,7 +296,7 @@ export default function ResumeEditor() {
         <html>
         <head>
           <title>工作站 - 独立屏幕实时预览</title>
-          <script src="[https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4](https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4)"></script>
+          <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
           <style>
             body { background: #f3f4f6; margin: 0; padding: 20px; font-family: sans-serif; }
             .preview-page { background: white; width: 210mm; min-height: 297mm; padding: 20mm; margin: 0 auto; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
