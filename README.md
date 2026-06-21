@@ -10,6 +10,7 @@
 cv-minify is a modern, lightweight Markdown live workspace built for fast local authoring, real-time preview, and pixel-perfect A4 export. It is designed for narrow laptops, multi-monitor workflows, and anyone who needs a smooth Markdown productivity tool without heavyweight dependencies.
 
 > Resume and interview brief: [PORTFOLIO.md](PORTFOLIO.md)
+> Enterprise architecture: [docs/ENTERPRISE_ARCHITECTURE.md](docs/ENTERPRISE_ARCHITECTURE.md)
 
 ---
 

@@ -7,3 +7,4 @@ dist/
 # 忽略本地开发环境配置文件
 .env*.local
 .DS_Store
+*.local.docx
