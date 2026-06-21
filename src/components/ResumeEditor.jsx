@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react';
+import { analyzeDocumentQuality } from '../lib/documentQuality';
 
 // 【技术亮点扩展】通用型、超轻量 Markdown 文本解析引擎
 function parseMarkdownToHtml(md) {
@@ -163,12 +164,7 @@ export default function ResumeEditor() {
 
   const debouncedMarkdown = useDebouncedValue(markdown, 120);
   const htmlContent = useMemo(() => parseMarkdownToHtml(debouncedMarkdown), [debouncedMarkdown]);
-  const documentStats = useMemo(() => {
-    const plain = markdown.trim();
-    const words = plain ? plain.split(/\s+/).filter(Boolean).length : 0;
-    const headings = (markdown.match(/^#{1,6}\s+/gm) || []).length;
-    return { chars: markdown.length, words, headings };
-  }, [markdown]);
+  const documentStats = useMemo(() => analyzeDocumentQuality(markdown), [markdown]);
 
   const fetchSSEStream = useCallback(async (url, options, onMessage, signal) => {
     const response = await fetch(url, {
@@ -423,7 +419,7 @@ export default function ResumeEditor() {
           <span class="font-bold text-gray-800 text-base">📄 cv-minify</span>
           <span class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-medium">● 自动保存中</span>
           <span class="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded font-medium">
-            {documentStats.chars} chars · {documentStats.words} words · {documentStats.headings} headings
+            {documentStats.chars} chars · {documentStats.words} words · {documentStats.headings} headings · score {documentStats.score}
           </span>
         </div>
 
