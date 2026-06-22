@@ -5,12 +5,23 @@ export function analyzeDocumentQuality(markdown = "") {
   const headings = (text.match(/^#{1,6}\s+/gm) || []).length;
   const bullets = (text.match(/^\s*[-*]\s+/gm) || []).length;
   const metrics = (text.match(/\b\d+(?:\.\d+)?%|\b\d+\s*(?:ms|s|hours|days|users|requests|stars)\b/gi) || []).length;
+  const links = (text.match(/\[[^\]]+\]\([^)]+\)/g) || []).length;
+  const codeBlocks = (text.match(/```[\s\S]*?```/g) || []).length;
+  const readingMinutes = Math.max(1, Math.ceil(words / 220));
 
   const warnings = [];
   if (headings < 2) warnings.push("Add clear section headings.");
   if (bullets < 3) warnings.push("Use bullets for scan-friendly experience entries.");
   if (metrics === 0) warnings.push("Add measurable impact such as percentages, latency, scale, or users.");
+  if (words > 80 && links === 0) warnings.push("Add at least one source, portfolio, or project link.");
   if (text.length > 6000) warnings.push("Consider splitting a long document before exporting.");
+
+  const strengths = [];
+  if (headings >= 2) strengths.push("Clear section structure.");
+  if (bullets >= 3) strengths.push("Readable bullet formatting.");
+  if (metrics > 0) strengths.push("Includes measurable impact.");
+  if (links > 0) strengths.push("Includes outbound references.");
+  if (codeBlocks > 0) strengths.push("Includes technical examples.");
 
   return {
     chars: text.length,
@@ -18,7 +29,11 @@ export function analyzeDocumentQuality(markdown = "") {
     headings,
     bullets,
     metrics,
+    links,
+    codeBlocks,
+    readingMinutes,
     score: Math.max(0, 100 - warnings.length * 18),
-    warnings
+    warnings,
+    strengths
   };
 }
