@@ -1,75 +1,67 @@
-# cv-minify - Lite Markdown Workspace
+# cv-minify
 
-[简体中文](#简体中文) | [English](#english)
+[![CI](https://github.com/rrg1225/cv-minify/actions/workflows/ci.yml/badge.svg)](https://github.com/rrg1225/cv-minify/actions/workflows/ci.yml)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)
+![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite)
+![Tailwind](https://img.shields.io/badge/TailwindCSS-4-06B6D4?logo=tailwindcss)
+![Markdown](https://img.shields.io/badge/Markdown-Workspace-111827?logo=markdown)
 
-cv-minify is a lightweight Markdown live workspace for local authoring, real-time preview, document quality checks, and A4/PDF-friendly output.
+cv-minify is a lightweight Markdown workspace for local writing, live preview, document quality scoring, and A4/PDF-friendly output. It is suitable for resumes, project briefs, technical notes, and portfolio documents.
 
 > Resume and interview brief: [PORTFOLIO.md](PORTFOLIO.md)
 > Enterprise architecture: [docs/ENTERPRISE_ARCHITECTURE.md](docs/ENTERPRISE_ARCHITECTURE.md)
 
----
+## Features
 
-## 简体中文
+- Local-first Markdown editing with instant preview.
+- Edit, split, and preview-only modes.
+- A4-friendly print styles for PDF export.
+- Autosave with `localStorage`.
+- Independent preview window for second-screen workflows.
+- Document quality analysis for headings, bullets, metrics, links, code blocks, and reading time.
+- Local fallback suggestions when `/api/ai-polish` is unavailable.
 
-### 项目亮点
-
-- **本地优先 Markdown 工作台**：无需后端即可编辑、预览、保存和导出。
-- **实时预览**：编辑区和预览区同步更新，支持编辑、分屏、预览模式。
-- **A4/PDF 友好**：内置打印样式，适合简历、作品集、技术文档导出。
-- **自动恢复**：通过 `localStorage` 保存草稿，降低刷新或误关页面带来的损失。
-- **文档质量分析**：统计字数、标题、列表、量化指标、链接、代码块和阅读时间，并输出改进建议。
-- **AI 降级策略**：如果 `/api/ai-polish` 不可用，会使用本地规则生成优化建议。
-- **CI 验证**：GitHub Actions 会运行 `npm test` 和 `npm run build`。
-
-### 快速开始
+## Quick Start
 
 ```bash
 npm install
 npm run dev
 ```
 
-### 常用命令
+## Scripts
 
 ```bash
-npm test
 npm run build
 npm run preview
 ```
 
-### 项目结构
+## Architecture
 
 ```text
-cv-minify/
-|-- src/components/ResumeEditor.jsx
-|-- src/lib/documentQuality.js
-|-- test/documentQuality.test.js
-|-- vite.config.js
-`-- package.json
+React editor
+  -> Markdown parser
+  -> HTML preview
+  -> document quality analyzer
+  -> print/PDF workflow
 ```
 
----
+Key files:
 
-## English
+| Path | Purpose |
+| --- | --- |
+| `src/components/ResumeEditor.jsx` | Main workspace UI |
+| `src/lib/documentQuality.js` | Document scoring and warnings |
+| `src/index.css` | Global and print styles |
+| `vite.config.js` | Vite configuration |
 
-### Highlights
+## Export Tips
 
-- **Local-first Markdown workspace** with no backend requirement.
-- **Live preview** for edit, split, and preview workflows.
-- **A4/PDF-friendly output** through print-focused styles.
-- **Autosave recovery** via `localStorage`.
-- **Document quality scoring** for headings, bullets, metrics, links, code blocks, and reading time.
-- **Graceful AI fallback** when `/api/ai-polish` is unavailable.
-- **CI coverage** for tests and production build.
+1. Use preview mode to inspect page breaks.
+2. Press `Ctrl + P`.
+3. Choose "Save as PDF".
+4. Enable background graphics.
+5. Use A4 paper and minimal margins.
 
-### Scripts
+## License
 
-```bash
-npm run dev
-npm test
-npm run build
-npm run preview
-```
-
-### Repository Topics
-
-`markdown`, `react`, `vite`, `tailwindcss`, `pdf`, `resume`
+MIT
