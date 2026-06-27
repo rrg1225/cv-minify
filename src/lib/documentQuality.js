@@ -7,6 +7,8 @@ export function analyzeDocumentQuality(markdown = "") {
   const metrics = (text.match(/\b\d+(?:\.\d+)?%|\b\d+\s*(?:ms|s|hours|days|users|requests|stars)\b/gi) || []).length;
   const links = (text.match(/\[[^\]]+\]\([^)]+\)/g) || []).length;
   const codeBlocks = (text.match(/```[\s\S]*?```/g) || []).length;
+  const tables = (text.match(/^\s*\|.+\|\s*$/gm) || []).length;
+  const tasks = (text.match(/^\s*[-*]\s+\[[ xX]\]\s+/gm) || []).length;
   const readingMinutes = Math.max(1, Math.ceil(words / 220));
 
   const warnings = [];
@@ -22,6 +24,8 @@ export function analyzeDocumentQuality(markdown = "") {
   if (metrics > 0) strengths.push("Includes measurable impact.");
   if (links > 0) strengths.push("Includes outbound references.");
   if (codeBlocks > 0) strengths.push("Includes technical examples.");
+  if (tables > 0) strengths.push("Uses tables for comparison or structured data.");
+  if (tasks > 0) strengths.push("Includes actionable task tracking.");
 
   return {
     chars: text.length,
@@ -31,6 +35,8 @@ export function analyzeDocumentQuality(markdown = "") {
     metrics,
     links,
     codeBlocks,
+    tables,
+    tasks,
     readingMinutes,
     score: Math.max(0, 100 - warnings.length * 18),
     warnings,

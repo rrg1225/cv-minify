@@ -19,3 +19,20 @@ test("scores structured markdown higher than sparse notes", () => {
   assert.equal(structured.metrics >= 2, true);
   assert.equal(structured.links, 1);
 });
+
+test("detects tables and task lists", () => {
+  const stats = analyzeDocumentQuality(`
+## Launch checklist
+
+| Area | Owner |
+| --- | --- |
+| API | Platform |
+
+- [x] Add smoke tests
+- [ ] Review rollout notes
+`);
+
+  assert.equal(stats.tables >= 3, true);
+  assert.equal(stats.tasks, 2);
+  assert.ok(stats.strengths.some((item) => item.includes("task")));
+});
