@@ -1,10 +1,13 @@
-# 忽略极其臃肿的第三方依赖文件夹
+# Dependencies
 node_modules/
 
-# 忽略本地打包编译生成的生产文件夹
+# Local build output
 dist/
 
-# 忽略本地开发环境配置文件
+# Local environment and generated files
+.env
+.env.local
 .env*.local
 .DS_Store
+Thumbs.db
 *.local.docx

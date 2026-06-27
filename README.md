@@ -31,6 +31,7 @@ npm run dev
 ## Scripts
 
 ```bash
+npm test
 npm run build
 npm run preview
 ```
@@ -61,6 +62,18 @@ Key files:
 3. Choose "Save as PDF".
 4. Enable background graphics.
 5. Use A4 paper and minimal margins.
+
+## Quality Gates
+
+- `npm test` covers document-quality scoring behavior.
+- `npm run build` verifies the production Vite bundle.
+- Print styles are kept in source control so PDF output remains reproducible.
+
+## Roadmap
+
+- Add import/export presets for resume, design doc, and incident review formats.
+- Add optional local-only AI polishing adapters with provider isolation.
+- Add visual regression checks for A4 print layout.
 
 ## License
 
